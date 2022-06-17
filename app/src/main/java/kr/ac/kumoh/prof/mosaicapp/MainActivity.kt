@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity() {
         viewBinding.videoCaptureButton.setOnClickListener { captureVideo() }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
+
+//        HttpCheckId()
     }
 
     private fun startCamera() {
