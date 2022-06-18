@@ -192,14 +192,14 @@ class MainActivity : AppCompatActivity() {
 
                     val url = "https://myser.run-asia-northeast1.goorm.io/postimage"
 
-                    val byteArray = ByteArray(image.planes[0].buffer.capacity())
+                    val byteArray = ByteArray(image.planes[0].buffer.remaining())
                     image.planes[0].buffer.get(byteArray)
 
                     val requestBody: RequestBody = MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
                         .addFormDataPart(
-                            "image",
-                            "filename",
+                            "image/jpg",
+                            "filename.jpg",
                             RequestBody.create(MultipartBody.FORM, byteArray)
                         )
                         .build()
@@ -211,7 +211,6 @@ class MainActivity : AppCompatActivity() {
 
                     // 클라이언트 생성
                    val client = OkHttpClient()
-
 
                    // 요청 전송
                    client.newCall(request).enqueue(object : Callback {
@@ -236,7 +235,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
+    fun byteArrayOfInts(vararg ints: Int) = ByteArray(ints.size) { pos -> ints[pos].toByte() }
     private fun takePhoto() {
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
