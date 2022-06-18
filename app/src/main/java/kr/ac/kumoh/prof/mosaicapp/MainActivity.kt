@@ -1,16 +1,17 @@
 package kr.ac.kumoh.prof.mosaicapp
 
 import android.Manifest
-import android.content.ContentResolver
+import android.R.attr.path
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.Recorder
@@ -19,11 +20,15 @@ import androidx.camera.video.VideoCapture
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kr.ac.kumoh.prof.mosaicapp.databinding.ActivityMainBinding
+import okhttp3.*
+import java.io.File
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
 
 typealias LumaListener = (luma: Double) -> Unit
 
@@ -64,6 +69,7 @@ class MainActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
+    @SuppressLint("RestrictedApi")
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -81,9 +87,9 @@ class MainActivity : AppCompatActivity() {
                 .also {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
-
-            imageCapture = ImageCapture.Builder()
-                .build()
+            
+            //화면 비율 640 X 480 설정
+            imageCapture = ImageCapture.Builder().setMaxResolution(Size(640, 480)).build()
 
             imageAnalyzer = ImageAnalysis.Builder().build()
 
@@ -92,6 +98,7 @@ class MainActivity : AppCompatActivity() {
             imageAnalyzer?.setAnalyzer(
                 ContextCompat.getMainExecutor(this),
                 ImageAnalysis.Analyzer { imageProxy: ImageProxy ->
+
                     if (needUpdateGraphicOverlayImageSourceInfo) {
 //                        val isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT
 //                        val rotationDegrees = imageProxy.imageInfo.rotationDegrees
@@ -129,8 +136,6 @@ class MainActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this)
 
         )
-
-
     }
 
 //    fun HttpCheckId() {
@@ -183,7 +188,46 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onCaptureSuccess(image: ImageProxy) {
-                    Log.e(TAG, "Photo Upload success: "+ image.width+" "+ image.height)
+                    Log.e(TAG, "Photo Upload success: "+ image.format)//JPEG Format
+
+                    val url = "https://myser.run-asia-northeast1.goorm.io/postimage"
+
+                    val byteArray = ByteArray(image.planes[0].buffer.capacity())
+                    image.planes[0].buffer.get(byteArray)
+
+                    val requestBody: RequestBody = MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart(
+                            "image",
+                            "filename",
+                            RequestBody.create(MultipartBody.FORM, byteArray)
+                        )
+                        .build()
+
+                    val request = Request.Builder()
+                    .url(url)
+                    .post(requestBody)
+                    .build()
+
+                    // 클라이언트 생성
+                   val client = OkHttpClient()
+
+
+                   // 요청 전송
+                   client.newCall(request).enqueue(object : Callback {
+
+                     override fun onResponse(call: Call, response: Response) {
+                       val body = response.body?.string();
+
+
+                       Log.d("요청", body!!)
+                     }
+
+                     override fun onFailure(call: Call, e: IOException) {
+                       Log.d("요청","요청 실패 ")
+                     }})
+
+                    image.close()
                     //super.onCaptureSuccess(image)
                 }
 
@@ -191,6 +235,7 @@ class MainActivity : AppCompatActivity() {
         )
 
     }
+
 
     private fun takePhoto() {
         // Get a stable reference of the modifiable image capture use case
