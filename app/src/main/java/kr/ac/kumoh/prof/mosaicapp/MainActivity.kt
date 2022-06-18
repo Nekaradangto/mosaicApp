@@ -1,6 +1,7 @@
 package kr.ac.kumoh.prof.mosaicapp
 
 import android.Manifest
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.os.Build
@@ -8,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.util.Size
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -57,11 +59,9 @@ class MainActivity : AppCompatActivity() {
 
         // Set up the listeners for take photo and video capture buttons
         viewBinding.imageCaptureButton.setOnClickListener { takePhoto() }
-        viewBinding.videoCaptureButton.setOnClickListener { captureVideo() }
+        viewBinding.videoCaptureButton.setOnClickListener { uploadPhoto() }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
-
-//        HttpCheckId()
     }
 
     private fun startCamera() {
@@ -126,7 +126,11 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "Use case binding failed", exc)
             }
 
-        }, ContextCompat.getMainExecutor(this))
+        }, ContextCompat.getMainExecutor(this)
+
+        )
+
+
     }
 
 //    fun HttpCheckId() {
@@ -166,6 +170,27 @@ class MainActivity : AppCompatActivity() {
 //
 //        })
 //    }
+
+    //사진을 저장하는게 아니라 서버에 바로 올리기 위한 함수 (10프레임에 한 번씩 실행시킬 예정)
+    private fun uploadPhoto(){
+        val imageCapture = imageCapture ?: return
+
+        imageCapture.takePicture(
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                }
+
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    Log.e(TAG, "Photo Upload success: "+ image.width+" "+ image.height)
+                    //super.onCaptureSuccess(image)
+                }
+
+            }
+        )
+
+    }
 
     private fun takePhoto() {
         // Get a stable reference of the modifiable image capture use case
