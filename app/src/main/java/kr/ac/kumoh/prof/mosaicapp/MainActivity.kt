@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
                 it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
             }
 
-        //화면 비율 640 X 480 설정
+        //화면 비율 960 X 540 설정
         imageCapture = ImageCapture.Builder()
             .setMaxResolution(Size(960, 540))
             .build()
