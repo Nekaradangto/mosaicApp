@@ -10,7 +10,14 @@
     <androidx.camera.view.PreviewView
         android:id="@+id/viewFinder"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent" >
+    </androidx.camera.view.PreviewView>
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible" />
 
     <Button
         android:id="@+id/image_capture_button"
@@ -31,7 +38,7 @@
         android:layout_marginBottom="50dp"
         android:layout_marginStart="50dp"
         android:elevation="2dp"
-        android:text="Upload Photo"
+        android:text="@string/upload_photo"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/vertical_centerline" />
 
