@@ -36,7 +36,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var overlay: Bitmap
-//    private lateinit var points: Queue<Float>
 
     private var imageCapture: ImageCapture? = null
     private var imageAnalyzer: ImageAnalysis? = null
@@ -57,14 +56,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Set up the listeners for take photo and video capture buttons
-        viewBinding.imageCaptureButton.setOnClickListener { uploadPhoto2() }
+        viewBinding.imageCaptureButton.setOnClickListener { takePhoto() }
         viewBinding.videoCaptureButton.setOnClickListener { uploadPhoto() }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
-
-//        waitPhoto()
-
-//        jsonParser()
     }
 
     @SuppressLint("RestrictedApi")
@@ -88,7 +83,6 @@ class MainActivity : AppCompatActivity() {
             .build()
 
         imageAnalyzer = ImageAnalysis.Builder()
-//                .setTargetResolution(Size(720, 1280))
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
 
@@ -101,24 +95,20 @@ class MainActivity : AppCompatActivity() {
               if (points.isNotEmpty()) {
                 val paint = Paint().apply {
                   isAntiAlias = true
-                  style = Paint.Style.STROKE
-                  color = Color.RED
-//                        setMaskFilter(BlurMaskFilter(5f, BlurMaskFilter.Blur.INNER))
+                  style = Paint.Style.FILL
+                  color = Color.WHITE
+                  setMaskFilter(BlurMaskFilter(5f, BlurMaskFilter.Blur.INNER))
                   strokeWidth = 10f
                 }
 
-                val size = points.size / 4
+                val size = points.size / 4-1
 
-                for (i in 1..size) {
+                for (i in 0..size) {
                   val canvas = Canvas(overlay)
-//                  val x = points.poll() * 2.7f
-//                  val y = points.poll() * 2.7f
-//                  val width = points.poll() * 2.7f
-//                  val height = points.poll() * 2.7f
-                  val x = points.elementAt(0) * 2.7f
-                  val y = points.elementAt(1) * 2.7f
-                  val width = points.elementAt(2) * 2.7f
-                  val height = points.elementAt(3) * 2.7f
+                  val x = points.elementAt(i*4+0) * 2.7f - 30f
+                  val y = points.elementAt(i*4+1) * 2.7f - 30f
+                  val width = points.elementAt(i*4+2) * 2.7f - 30f
+                  val height = points.elementAt(i*4+3) * 2.7f - 30f
 
                   rect.set(x, y, width, height)
 
@@ -130,20 +120,13 @@ class MainActivity : AppCompatActivity() {
                     canvas
                   }
                 }
-//                takePhoto()
               }
-//              else {
-//                takePhoto()
-//              }
-
               runOnUiThread {
                 viewBinding.imageView.setImageBitmap(overlay)
               }
               imageProxy.close()
-
           }
         )
-
           // Select back camera as a default
           val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -164,11 +147,10 @@ class MainActivity : AppCompatActivity() {
       )
     }
 
+    // json 파일 파싱 함수
     private fun jsonParser(jsonString: String): Queue<Float> {
-//      val jsonString = assets.open("test.json").reader().readText()
       val jsonObject = JSONTokener(jsonString).nextValue() as JSONObject
       val jsonArray = jsonObject.getJSONArray("indices")
-//      val arr: Array<Float> = arrayOf(0f, 0f, 0f, 0f)
       points = LinkedList<Float>()
 
       for (i in 0 until jsonArray.length()) {
@@ -176,10 +158,8 @@ class MainActivity : AppCompatActivity() {
         points.offer(jsonArray.getJSONObject(i).getString("y").toFloat())
         points.offer(jsonArray.getJSONObject(i).getString("width").toFloat())
         points.offer(jsonArray.getJSONObject(i).getString("height").toFloat())
-//        points.addAll(arr)
-        Log.i("points", points.toString())
       }
-//      Log.i("sampleQueueSize", points.size.toString())
+      Log.i("points", points.toString())
       return points
     }
 
@@ -233,17 +213,15 @@ class MainActivity : AppCompatActivity() {
                      }})
 
                     image.close()
-                    //super.onCaptureSuccess(image)
                 }
 
             }
         )
-//        waitPhoto() // 코드 실행뒤에 계속해서 반복하도록 작업한다.
-
+        waitPhoto() // 코드 실행뒤에 계속해서 반복하도록 작업한다.
     }
 
-    // 사진을 저장하는게 아니라 서버에 바로 올리기 위한 함수 (10프레임에 한 번씩 실행시킬 예정)
-    private fun uploadPhoto2() {
+    // 블러 처리된 사진 저장
+    private fun takePhoto() {
         val imageCapture = imageCapture ?: return
 
         imageCapture.takePicture(
@@ -285,77 +263,28 @@ class MainActivity : AppCompatActivity() {
 
                             val root: File=android.os.Environment.getExternalStorageDirectory()
 
-                            val fos = FileOutputStream(root.getAbsolutePath()+"/Pictures/tmp.jpg")
+                            val fos = FileOutputStream(root.getAbsolutePath()+"/Pictures/blur.jpg")
                             fos.write(response.body!!.bytes())
                             fos.close()
-
+                            val imgBitmap = BitmapFactory.decodeFile(root.getAbsolutePath()+"/Pictures/blur.jpg")
+                            MediaStore.Images.Media.insertImage(getContentResolver(), imgBitmap, FILENAME_FORMAT , "blurImage")
                         }
 
                         override fun onFailure(call: Call, e: IOException) {
                             Log.d("요청 실패",e.toString())
                         }})
-
                     image.close()
-                    //super.onCaptureSuccess(image)
                 }
-
             }
         )
-//        waitPhoto() // 코드 실행뒤에 계속해서 반복하도록 작업한다.
-
     }
-
-
 
     private val mDelayHandler: Handler by lazy {
         Handler(Looper.getMainLooper())
     }
 
-    private fun waitPhoto(){
-        mDelayHandler.postDelayed(::uploadPhoto, 10000) // 5초 후에 uploadPhoto 함수를 실행한다.
-    }
-
-//    fun byteArrayOfInts(vararg ints: Int) = ByteArray(ints.size) { pos -> ints[pos].toByte() }
-    private fun takePhoto() {
-        // Get a stable reference of the modifiable image capture use case
-        val imageCapture = imageCapture ?: return
-
-        // Create time stamped name and MediaStore entry.
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
-            .format(System.currentTimeMillis())
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
-            }
-        }
-
-        // Create output options object which contains file + metadata
-        val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues)
-            .build()
-
-        // Set up image capture listener, which is triggered after photo has
-        // been taken
-        imageCapture.takePicture(
-            outputOptions,
-            ContextCompat.getMainExecutor(this),
-            object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exc: ImageCaptureException) {
-                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
-                }
-
-                override fun
-                        onImageSaved(output: ImageCapture.OutputFileResults){
-                    val msg = "Photo capture succeeded: ${output.savedUri}"
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, msg)
-                }
-            }
-        )
+    private fun waitPhoto() {
+        mDelayHandler.postDelayed(::uploadPhoto, 1000) // 1초 후에 uploadPhoto 함수를 실행한다.
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
