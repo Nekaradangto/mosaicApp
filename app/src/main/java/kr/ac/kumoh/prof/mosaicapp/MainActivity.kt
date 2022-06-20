@@ -22,7 +22,10 @@ import kr.ac.kumoh.prof.mosaicapp.databinding.ActivityMainBinding
 import okhttp3.*
 import org.json.JSONObject
 import org.json.JSONTokener
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -54,7 +57,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Set up the listeners for take photo and video capture buttons
-        viewBinding.imageCaptureButton.setOnClickListener { takePhoto() }
+        viewBinding.imageCaptureButton.setOnClickListener { uploadPhoto2() }
         viewBinding.videoCaptureButton.setOnClickListener { uploadPhoto() }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -239,6 +242,71 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    // 사진을 저장하는게 아니라 서버에 바로 올리기 위한 함수 (10프레임에 한 번씩 실행시킬 예정)
+    private fun uploadPhoto2() {
+        val imageCapture = imageCapture ?: return
+
+        imageCapture.takePicture(
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                }
+
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    Log.e(TAG, "Photo Upload success: "+ image.format)//JPEG Format
+
+                    val url = "https://nekara.loca.lt/updateimage"
+
+                    val byteArray = ByteArray(image.planes[0].buffer.remaining())
+                    image.planes[0].buffer.get(byteArray)
+
+                    val requestBody: RequestBody = MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart(
+                            "image/jpg",
+                            "filename.jpg",
+                            RequestBody.create(MultipartBody.FORM, byteArray)
+                        )
+                        .build()
+
+                    val request = Request.Builder()
+                        .url(url)
+                        .post(requestBody)
+                        .build()
+
+                    // 클라이언트 생성
+                    val client = OkHttpClient()
+
+                    // 요청 전송
+                    client.newCall(request).enqueue(object : Callback {
+
+                        override fun onResponse(call: Call, response: Response) {
+
+                            val root: File=android.os.Environment.getExternalStorageDirectory()
+
+                            val fos = FileOutputStream(root.getAbsolutePath()+"/Pictures/tmp.jpg")
+                            fos.write(response.body!!.bytes())
+                            fos.close()
+
+                        }
+
+                        override fun onFailure(call: Call, e: IOException) {
+                            Log.d("요청 실패",e.toString())
+                        }})
+
+                    image.close()
+                    //super.onCaptureSuccess(image)
+                }
+
+            }
+        )
+//        waitPhoto() // 코드 실행뒤에 계속해서 반복하도록 작업한다.
+
+    }
+
+
+
     private val mDelayHandler: Handler by lazy {
         Handler(Looper.getMainLooper())
     }
@@ -315,44 +383,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-//    fun HttpCheckId() {
-//
-//    // URL을 만들어 주고
-//    val url = "https://myser.run-asia-northeast1.goorm.io/post"
-//
-//    //데이터를 담아 보낼 바디를 만든다
-//    val requestBody : RequestBody = FormBody.Builder()
-//      .add("id","지난달 28일 수원에 살고 있는 윤주성 연구원은 코엑스(서울 삼성역)에서 개최되는 DEVIEW 2019 Day1에 참석했다. LaRva팀의 '엄~청 큰 언어 모델 공장 가동기!' 세션을 들으며 언어모델을 학습시킬때 multi-GPU, TPU 모두 써보고 싶다는 생각을 했다.")
-//      .build()
-//
-//    // OkHttp Request 를 만들어준다.
-//    val request = Request.Builder()
-//      .url(url)
-//      .post(requestBody)
-//      .build()
-//
-//    // 클라이언트 생성
-//    val client = OkHttpClient()
-//
-//    Log.d("전송 주소 ","https://myser.run-asia-northeast1.goorm.io/post")
-//
-//    // 요청 전송
-//    client.newCall(request).enqueue(object : Callback {
-//
-//      override fun onResponse(call: Call, response: Response) {
-//        val body = response.body?.string();
-//
-//
-//        Log.d("요청", body!!)
-//      }
-//
-//      override fun onFailure(call: Call, e: IOException) {
-//        Log.d("요청","요청 실패 ")
-//      }
-//
-//    })
-//}
 
     companion object {
         private const val TAG = "MosaicApp"
