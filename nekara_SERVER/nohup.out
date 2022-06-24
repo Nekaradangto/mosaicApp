@@ -1,0 +1,58 @@
+ * Serving Flask app 'app' (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+ * Running on all addresses (0.0.0.0)
+   WARNING: This is a development server. Do not use it in a production deployment.
+ * Running on http://127.0.0.1:8000
+ * Running on http://172.21.97.209:8000 (Press CTRL+C to quit)
+127.0.0.1 - - [19/Jun/2022 16:43:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Jun/2022 16:43:44] "GET /favicon.ico HTTP/1.1" 404 -
+app.py:31: DeprecationWarning: The binary mode of fromstring is deprecated, as it behaves surprisingly on unicode inputs. Use frombuffer instead
+  encoded_img = np.fromstring(params, dtype = np.uint8)
+[2022-06-19 16:44:12,812] ERROR in app: Exception on /postimage [POST]
+Traceback (most recent call last):
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/flask/app.py", line 2077, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/flask/app.py", line 1525, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/flask/app.py", line 1523, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/flask/app.py", line 1509, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "app.py", line 35, in postimage
+    boxes = pytesseract.image_to_boxes(img, lang='kor')
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/pytesseract/pytesseract.py", line 476, in image_to_boxes
+    return {
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/pytesseract/pytesseract.py", line 483, in <lambda>
+    Output.STRING: lambda: run_and_get_output(*args),
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/pytesseract/pytesseract.py", line 286, in run_and_get_output
+    run_tesseract(**kwargs)
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/pytesseract/pytesseract.py", line 262, in run_tesseract
+    raise TesseractError(proc.returncode, get_errors(error_string))
+pytesseract.pytesseract.TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/4.00/tessdata/kor.traineddata Please make sure the TESSDATA_PREFIX environment variable is set to your "tessdata" directory. Failed loading language \'kor\' Tesseract couldn\'t load any languages! Could not initialize tesseract.')
+127.0.0.1 - - [19/Jun/2022 16:44:12] "POST /postimage HTTP/1.1" 500 -
+[2022-06-19 16:44:22,609] ERROR in app: Exception on /postimage [POST]
+Traceback (most recent call last):
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/flask/app.py", line 2077, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/flask/app.py", line 1525, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/flask/app.py", line 1523, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/flask/app.py", line 1509, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "app.py", line 35, in postimage
+    boxes = pytesseract.image_to_boxes(img, lang='kor')
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/pytesseract/pytesseract.py", line 476, in image_to_boxes
+    return {
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/pytesseract/pytesseract.py", line 483, in <lambda>
+    Output.STRING: lambda: run_and_get_output(*args),
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/pytesseract/pytesseract.py", line 286, in run_and_get_output
+    run_tesseract(**kwargs)
+  File "/home/joohyeson/.local/lib/python3.8/site-packages/pytesseract/pytesseract.py", line 262, in run_tesseract
+    raise TesseractError(proc.returncode, get_errors(error_string))
+pytesseract.pytesseract.TesseractError: (1, 'Error opening data file /usr/share/tesseract-ocr/4.00/tessdata/kor.traineddata Please make sure the TESSDATA_PREFIX environment variable is set to your "tessdata" directory. Failed loading language \'kor\' Tesseract couldn\'t load any languages! Could not initialize tesseract.')
+127.0.0.1 - - [19/Jun/2022 16:44:22] "POST /postimage HTTP/1.1" 500 -
+your url is: https://nekara.loca.lt
